@@ -884,7 +884,7 @@ const CBDetect = (() => {
       const res = await fetch('model.json', { cache: 'no-cache' });
       if (res.ok && (res.headers.get('Content-Type') || '').includes('json')) {
         CBDetect.useSpec(await res.json());
-        $('.tag').textContent = 'Retrained with labels from listeners';
+        $('.tag').textContent = 'Retrained on hand-labeled songs';
         if (state.x) setClip(state.x, state.sr, state.name, true);
       }
     } catch (e) {}
