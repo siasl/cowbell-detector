@@ -677,8 +677,23 @@ const CBDetect = (() => {
     setClip(mono, buf.sampleRate, name);
   }
 
-  // YouTube links need the local server (server.py); the hosted page can't reach YouTube.
+  // Without the local server, a YouTube link goes to a converter that already has the link filled in;
+  // people download the MP3 there and drop it here.
+  const YT_LINK = /^(https?:\/\/)?([a-z0-9-]+\.)?(youtube\.com|youtu\.be|youtube-nocookie\.com)\//i;
+  function openConverter(url) {
+    const note = $('#yt-note');
+    if (!YT_LINK.test(url)) { note.textContent = "That doesn't look like a YouTube link. Paste a youtube.com or youtu.be URL."; return; }
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    const target = 'https://vavel.pl/#u=' + encodeURIComponent(url);
+    const win = window.open(target, '_blank', 'noopener');
+    note.innerHTML = '';
+    const a = document.createElement('a'); a.href = target; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Open the converter';
+    note.append(win ? 'Opened the converter in a new tab. Download the MP3 there, then drop it in the box above. ' : '', a, win ? '' : ' to download the MP3, then drop it in the box above.');
+  }
+
+  // YouTube links download through the local server (server.py) when it's running.
   async function handleYouTube(url) {
+    if (!state.local) { openConverter(url); return; }
     state.demo = null;
     $('#demo-yes').setAttribute('aria-pressed', 'false');
     $('#demo-no').setAttribute('aria-pressed', 'false');
@@ -879,6 +894,8 @@ const CBDetect = (() => {
     }, 800);
   }
   async function initPublic() {
+    $('#yt-url').disabled = false; $('#yt-go').disabled = false; $('#yt-go').textContent = 'Get MP3';
+    $('#yt-note').textContent = 'Opens vavel.pl with your link filled in. Download the MP3 there, then drop it in the box above.';
     // A published model.json next to the page (GitHub Pages) replaces the built-in weights.
     try {
       const res = await fetch('model.json', { cache: 'no-cache' });
